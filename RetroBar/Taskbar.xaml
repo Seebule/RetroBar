@@ -55,6 +55,7 @@
         </ContentControl.LayoutTransform>
         <DockPanel>
             <Button Visibility="Collapsed" x:Name="FocusDummyButton" />
+            <!-- Default Start button (spans full height), hidden when separate Quick Launch row is active -->
             <controls:StartButton x:Name="StartButton"
                                   Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}">
                 <DockPanel.Dock>
@@ -64,6 +65,7 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:StartButton>
+            <!-- Inline Quick Launch for default mode -->
             <controls:Toolbar x:Name="QuickLaunchToolbar"
                               Visibility="Collapsed"
                               Path="{Binding Source={x:Static utilities:Settings.Instance}, Path=QuickLaunchPath}"
@@ -125,9 +127,32 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:InputLanguage>
-            <controls:TaskList VerticalAlignment="Stretch"
-                               Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                               Tasks="{Binding Tasks}"></controls:TaskList>
+            <!-- Center area: two rows when separate Quick Launch is active.
+                 Row 0: TaskList (apps)
+                 Row 1: Start button + Quick Launch toolbar (bottom row) -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- Apps on the top row -->
+                <controls:TaskList Grid.Row="0" VerticalAlignment="Stretch"
+                                   Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                   Tasks="{Binding Tasks}"></controls:TaskList>
+                <!-- Bottom row: Start button + Quick Launch (only visible in separate mode) -->
+                <DockPanel Grid.Row="1">
+                    <controls:StartButton x:Name="StartButtonSeparate"
+                                          Visibility="Collapsed"
+                                          Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
+                                          VerticalAlignment="Bottom" />
+                    <controls:Toolbar x:Name="QuickLaunchToolbarSeparate"
+                                      Tag="True"
+                                      Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=DesiredRowHeight}"
+                                      Visibility="Collapsed"
+                                      Path="{Binding Source={x:Static utilities:Settings.Instance}, Path=QuickLaunchPath}"
+                                      Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                </DockPanel>
+            </Grid>
         </DockPanel>
     </ContentControl>
     <appbar:AppBarWindow.ContextMenu>

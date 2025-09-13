@@ -13,6 +13,17 @@ namespace RetroBar.Converters
         {
             bool horizontal = Settings.Instance.Edge is AppBarEdge.Top or AppBarEdge.Bottom;
             int rows = Settings.Instance.RowCount;
+            bool forceHorizontal = false;
+
+            if (values != null && values.Length > 2 && values[2] is bool b)
+            {
+                forceHorizontal = b;
+            }
+
+            if (forceHorizontal)
+            {
+                return Orientation.Horizontal;
+            }
 
             if (horizontal && rows > 1)
             {

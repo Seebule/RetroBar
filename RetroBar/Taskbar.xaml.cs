@@ -69,6 +69,10 @@ namespace RetroBar
             InitializeComponent();
             DataContext = _shellManager;
             StartButton.StartMenuMonitor = startMenuMonitor;
+            if (StartButtonSeparate != null)
+            {
+                StartButtonSeparate.StartMenuMonitor = startMenuMonitor;
+            }
 
             RecalculateSize(false);
 
@@ -78,10 +82,7 @@ namespace RetroBar
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
 
-            if (Settings.Instance.ShowQuickLaunch)
-            {
-                QuickLaunchToolbar.Visibility = Visibility.Visible;
-            }
+            UpdateQuickLaunchVisibility();
 
             if (Settings.Instance.ShowDesktopButton)
             {
@@ -112,21 +113,16 @@ namespace RetroBar
                 PeekDuringAutoHide();
                 RecalculateSize();
             }
-            else if (e.PropertyName == nameof(Settings.ShowQuickLaunch))
+            else if (e.PropertyName == nameof(Settings.ShowQuickLaunch) ||
+                     e.PropertyName == nameof(Settings.SeparateQuickLaunchRow))
             {
-                if (Settings.Instance.ShowQuickLaunch)
-                {
-                    QuickLaunchToolbar.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    QuickLaunchToolbar.Visibility = Visibility.Collapsed;
-                }
+                UpdateQuickLaunchVisibility();
             }
             else if (e.PropertyName == nameof(Settings.Edge))
             {
                 PeekDuringAutoHide();
                 AppBarEdge = Settings.Instance.Edge;
+                UpdateQuickLaunchVisibility();
                 UpdatePosition();
             }
             else if (e.PropertyName == nameof(Settings.Language))
@@ -182,6 +178,7 @@ namespace RetroBar
             {
                 PeekDuringAutoHide();
                 RecalculateSize();
+                UpdateQuickLaunchVisibility();
                 OnPropertyChanged(nameof(Rows));
             }
             else if (e.PropertyName == nameof(Settings.TaskbarWidth))
@@ -196,6 +193,42 @@ namespace RetroBar
             else if (e.PropertyName == nameof(Settings.AutoHideTransparent))
             {
                 PeekDuringAutoHide();
+            }
+        }
+
+        private void UpdateQuickLaunchVisibility()
+        {
+            bool showQL = Settings.Instance.ShowQuickLaunch;
+            bool horizontal = AppBarEdge == AppBarEdge.Top || AppBarEdge == AppBarEdge.Bottom;
+            bool canSeparate = showQL && horizontal && Settings.Instance.RowCount > 1 && Settings.Instance.SeparateQuickLaunchRow;
+
+            if (QuickLaunchToolbarSeparate != null)
+            {
+                QuickLaunchToolbarSeparate.Visibility = canSeparate ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (QuickLaunchToolbar != null)
+            {
+                QuickLaunchToolbar.Visibility = showQL && !canSeparate ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            // Toggle Start button locations
+            if (StartButtonSeparate != null)
+            {
+                StartButtonSeparate.Visibility = canSeparate ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (StartButton != null)
+            {
+                // Default Start button only when not separating
+                if (!Screen.Primary && !Settings.Instance.ShowStartButtonMultiMon)
+                {
+                    StartButton.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    StartButton.Visibility = canSeparate ? Visibility.Collapsed : Visibility.Visible;
+                }
             }
         }
 
@@ -235,6 +268,14 @@ namespace RetroBar
             if (AllowClose)
             {
                 QuickLaunchToolbar.Visibility = Visibility.Collapsed;
+                if (QuickLaunchToolbarSeparate != null)
+                {
+                    QuickLaunchToolbarSeparate.Visibility = Visibility.Collapsed;
+                }
+                if (StartButtonSeparate != null)
+                {
+                    StartButtonSeparate.Visibility = Visibility.Collapsed;
+                }
 
                 Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             }
@@ -463,13 +504,28 @@ namespace RetroBar
 
         private void UpdateStartButton()
         {
+            bool canSeparate = Settings.Instance.ShowQuickLaunch &&
+                               (AppBarEdge == AppBarEdge.Top || AppBarEdge == AppBarEdge.Bottom) &&
+                               Settings.Instance.RowCount > 1 &&
+                               Settings.Instance.SeparateQuickLaunchRow;
+
             if (!Screen.Primary && !Settings.Instance.ShowStartButtonMultiMon)
             {
+                if (StartButtonSeparate != null) StartButtonSeparate.Visibility = Visibility.Collapsed;
                 StartButton.Visibility = Visibility.Collapsed;
                 return;
             }
 
-            StartButton.Visibility = Visibility.Visible;
+            if (canSeparate)
+            {
+                if (StartButtonSeparate != null) StartButtonSeparate.Visibility = Visibility.Visible;
+                StartButton.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (StartButtonSeparate != null) StartButtonSeparate.Visibility = Visibility.Collapsed;
+                StartButton.Visibility = Visibility.Visible;
+            }
         }
 
         #region Unlocked taskbar drag hook

@@ -375,6 +375,13 @@ namespace RetroBar.Utilities
             get => _winNumHotkeysAction;
             set => SetEnum(ref _winNumHotkeysAction, value);
         }
+
+        private bool _separateQuickLaunchRow = false;
+        public bool SeparateQuickLaunchRow
+        {
+            get => _separateQuickLaunchRow;
+            set => Set(ref _separateQuickLaunchRow, value);
+        }
         #endregion
 
         #region Old Properties

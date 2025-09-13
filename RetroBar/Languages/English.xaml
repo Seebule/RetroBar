@@ -165,6 +165,9 @@
     <s:String x:Key="ime_conversion_general">General</s:String>
     <s:String x:Key="ime_conversion_none">No Conversion</s:String>
 
+    <!-- New setting label -->
+    <s:String x:Key="separate_quick_launch_row">Put Quick Launch on a separate row</s:String>
+
     <!-- Items below are settings, and should always be in English -->
     <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
     <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>

@@ -117,6 +117,14 @@ namespace RetroBar.Controls
                     taskbarItems?.Refresh();
                 }
             }
+            else if (e.PropertyName == nameof(Settings.RowCount) ||
+                     e.PropertyName == nameof(Settings.SeparateQuickLaunchRow) ||
+                     e.PropertyName == nameof(Settings.ShowQuickLaunch) ||
+                     e.PropertyName == nameof(Settings.Edge))
+            {
+                // Recompute widths and scrollability when layout-affecting settings change
+                SetTaskButtonWidth();
+            }
         }
         private void TaskList_TaskbarHotkeyPressed(object sender, HotkeyManager.TaskbarHotkeyEventArgs e)
         {
@@ -228,14 +236,43 @@ namespace RetroBar.Controls
                 return;
             }
 
-            double height = ActualHeight;
             int rows = Host.Rows;
+
+            // If Quick Launch takes a separate row, tasks only get (rows - 1)
+            bool separateQuickLaunch = Settings.Instance.SeparateQuickLaunchRow &&
+                                       Settings.Instance.ShowQuickLaunch &&
+                                       (Settings.Instance.Edge == AppBarEdge.Top || Settings.Instance.Edge == AppBarEdge.Bottom) &&
+                                       rows > 1;
+            if (separateQuickLaunch)
+            {
+                rows -= 1;
+            }
+
+            if (rows < 1) rows = 1;
 
             int taskCount = TasksList.Items.Count;
             double margin = TaskButtonLeftMargin + TaskButtonRightMargin;
-            double maxWidth = TasksList.ActualWidth / Math.Ceiling((double)taskCount / rows);
             double defaultWidth = DefaultButtonWidth + margin;
             double minWidth = MinButtonWidth + margin;
+            double availableWidth = TasksList.ActualWidth;
+            if (availableWidth <= 0)
+            {
+                availableWidth = ActualWidth;
+            }
+            double maxWidth = availableWidth / Math.Ceiling((double)taskCount / rows);
+
+            // If only one visible row of tasks, ensure scrolling when more tasks than fit at min width
+            bool singleVisibleRow = rows == 1;
+            if (singleVisibleRow)
+            {
+                int perRowAtMin = Math.Max(1, (int)Math.Floor(availableWidth / minWidth));
+                if (taskCount > perRowAtMin)
+                {
+                    ButtonWidth = Math.Floor(availableWidth / perRowAtMin);
+                    SetScrollable(true);
+                    return;
+                }
+            }
 
             if (maxWidth > defaultWidth)
             {
